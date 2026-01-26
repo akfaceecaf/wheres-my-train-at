@@ -8,13 +8,15 @@ load_dotenv()
 STOP_ID_1, ROUTE_ID_1 = os.getenv("DISPLAY_STOP_ID_1"), os.getenv("DISPLAY_ROUTE_ID_1")
 STOP_ID_2, ROUTE_ID_2 = os.getenv("DISPLAY_STOP_ID_2"), os.getenv("DISPLAY_ROUTE_ID_2")
 
-
 LED_WIDTH = 64
 LED_HEIGHT = 32
 SCALE = 10
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 FONT_SIZE = 8
+SCROLL_DELAY = 60
+SCROLL_PAUSE_DURATION = 60
+SCROLL_SPEED = 4
 
 pygame.init()
 screen = pygame.display.set_mode((LED_WIDTH * SCALE, LED_HEIGHT * SCALE))
@@ -36,55 +38,16 @@ def fetch_train_data(stop_id, route_id):
 train_data_1 = fetch_train_data(STOP_ID_1, ROUTE_ID_1)
 train_data_2 = fetch_train_data(STOP_ID_2, ROUTE_ID_2)
 
-# for refresh data
-last_fetch_time = pygame.time.get_ticks()
-fetch_interval = 30000 
-
-running = True
-clock = pygame.time.Clock()
-
-scroll_offset = 0
-scroll_speed = 4
-scroll_delay = 60  
-frame_counter = 0
-scroll_pause_counter = 0
-scroll_pause_duration = 60 
-
-scroll_offset_2 = 0
-scroll_speed_2 = 4
-scroll_delay_2 = 60  
-frame_counter_2 = 0
-scroll_pause_counter_2 = 0
-scroll_pause_duration_2 = 60 
-
-while running:
-    current_time = pygame.time.get_ticks()
-    # refresh data
-    if current_time - last_fetch_time >= fetch_interval:
-        print("Fetching new train data...")
-        train_data_1 = fetch_train_data(STOP_ID_1, ROUTE_ID_1)
-        train_data_2 = fetch_train_data(STOP_ID_2, ROUTE_ID_2)
-        scroll_offset = 0
-        frame_counter = 0
-        scroll_pause_counter = 0
-        scroll_offset_2 = 0
-        frame_counter_2 = 0
-        scroll_pause_counter_2 = 0
-        last_fetch_time = current_time
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    
-    screen.fill(BLACK)
-    route = train_data_1["routeId"]
-    minutes = int(train_data_1["minutesAway"])
-    station_name = train_data_1["stopName"]
+def draw_train_line(train_data, y, scroll_state):
+    route = train_data["routeId"]
+    minutes = int(train_data["minutesAway"])
+    station_name = train_data["stopName"]
     color = LOGO_COLORS[route]
-    
+    scroll_offset, frame_counter, scroll_pause_counter = scroll_state
+
     # Train Logo
     circle_center_x = 6
-    circle_center_y = 8
+    circle_center_y = y
     circle_radius = 5
     
     screen_x = circle_center_x * SCALE
@@ -105,15 +68,15 @@ while running:
     station_width_actual = station_surface.get_width()
     if station_width_actual > available_width:
         frame_counter += 1
-        if frame_counter > scroll_delay:
+        if frame_counter > SCROLL_DELAY:
             if abs(scroll_offset) > station_width_actual - available_width:
                 scroll_pause_counter += 1
-                if scroll_pause_counter >= scroll_pause_duration:
+                if scroll_pause_counter >= SCROLL_PAUSE_DURATION:
                     scroll_offset = 0
                     frame_counter = 0
                     scroll_pause_counter = 0
             else:
-                scroll_offset -= scroll_speed
+                scroll_offset -= SCROLL_SPEED
         station_rect = station_surface.get_rect(left=screen_x + scroll_offset, centery=screen_y)
     else:
         station_rect = station_surface.get_rect(left=screen_x, centery=screen_y)
@@ -123,65 +86,46 @@ while running:
     screen.set_clip(None) 
     
     # Minutes
-    minutes_text = f"{minutes} Min"
+    if minutes is not None:
+        minutes_text = f"{minutes} Min"
+    else:
+        minutes_text = "N/A"
     minutes_surface = font.render(minutes_text, False, WHITE)
     text_x = (LED_WIDTH - 18) * SCALE
     text_y = circle_center_y * SCALE
     minutes_rect = minutes_surface.get_rect(x=text_x, centery=text_y)
     screen.blit(minutes_surface, minutes_rect)
+    return (scroll_offset, frame_counter, scroll_pause_counter)
 
-    route_2 = train_data_2["routeId"]
-    minutes_2 = int(train_data_2["minutesAway"])
-    station_name_2 = train_data_2["stopName"]
-    color_2 = LOGO_COLORS[route_2]
-    
-    # Train Logo
-    circle_center_x_2 = 6
-    circle_center_y_2 = 24
-    circle_radius_2 = 5
-    
-    screen_x_2 = circle_center_x_2 * SCALE
-    screen_y_2 = circle_center_y_2 * SCALE
-    screen_radius_2 = circle_radius_2 * SCALE
-    
-    pygame.draw.circle(screen, color_2, (screen_x_2, screen_y_2), screen_radius_2)
-    
-    route_surface_2 = font.render(route_2, False, WHITE)
-    route_rect_2 = route_surface_2.get_rect(center=(screen_x_2, screen_y_2))
-    screen.blit(route_surface_2, route_rect_2)
+# for refresh data
+last_fetch_time = pygame.time.get_ticks()
+fetch_interval = 30000 
 
-    start_x_2 = (circle_center_x_2 + circle_radius_2 + 3)
-    end_x_2 = (LED_WIDTH - 20)
-    screen_x_2 = start_x_2 * SCALE
-    available_width_2 = (end_x - start_x) * SCALE
-    station_surface_2 = font.render(station_name_2, True, WHITE)
-    station_width_actual_2 = station_surface_2.get_width()
-    if station_width_actual_2 > available_width_2:
-        frame_counter_2 += 1
-        if frame_counter_2 > scroll_delay_2:
-            if abs(scroll_offset_2) > station_width_actual_2 - available_width_2:
-                scroll_pause_counter_2 += 1
-                if scroll_pause_counter_2 >= scroll_pause_duration_2:
-                    scroll_offset_2 = 0
-                    frame_counter_2 = 0
-                    scroll_pause_counter_2 = 0
-            else:
-                scroll_offset_2 -= scroll_speed_2
-        station_rect_2 = station_surface_2.get_rect(left=screen_x_2 + scroll_offset_2, centery=screen_y_2)
-    else:
-        station_rect_2 = station_surface_2.get_rect(left=screen_x_2, centery=screen_y_2)
-    clip_rect_2 = pygame.Rect(screen_x_2, 0, available_width_2, LED_HEIGHT * SCALE)
-    screen.set_clip(clip_rect_2)
-    screen.blit(station_surface_2, station_rect_2)
-    screen.set_clip(None) 
+running = True
+clock = pygame.time.Clock()
+
+scroll_state_1 = (0,0,0) # scroll_offset, frame_counter, scroll_pause_counter
+scroll_state_2 = (0,0,0)
+
+while running:
+    current_time = pygame.time.get_ticks()
+
+    # refresh data
+    if current_time - last_fetch_time >= fetch_interval:
+        print("Fetching new train data...")
+        train_data_1 = fetch_train_data(STOP_ID_1, ROUTE_ID_1)
+        train_data_2 = fetch_train_data(STOP_ID_2, ROUTE_ID_2)
+        scroll_state_1 = (0,0,0)
+        scroll_state_2 = (0,0,0)
+        last_fetch_time = current_time
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
     
-    # Minutes
-    minutes_text_2 = f"{minutes_2} Min"
-    minutes_surface_2 = font.render(minutes_text_2, False, WHITE)
-    text_x_2 = (LED_WIDTH - 18) * SCALE
-    text_y_2 = circle_center_y_2 * SCALE
-    minutes_rect_2 = minutes_surface_2.get_rect(x=text_x_2, centery=text_y_2)
-    screen.blit(minutes_surface_2, minutes_rect_2)
+    screen.fill(BLACK)
+    scroll_state_1 = draw_train_line(train_data_1, 8, scroll_state_1)
+    scroll_state_2 = draw_train_line(train_data_2, 24, scroll_state_2)
 
     pygame.display.flip()
     clock.tick(30)
