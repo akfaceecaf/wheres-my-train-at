@@ -39,10 +39,16 @@ train_data_1 = fetch_train_data(STOP_ID_1, ROUTE_ID_1)
 train_data_2 = fetch_train_data(STOP_ID_2, ROUTE_ID_2)
 
 def draw_train_line(train_data, y, scroll_state):
-    route = train_data["routeId"]
-    minutes = int(train_data["minutesAway"])
-    station_name = train_data["stopName"]
-    color = LOGO_COLORS[route]
+    if train_data:
+        route = train_data["routeId"]
+        minutes = train_data["minutesAway"]
+        station_name = train_data["stopName"]
+        color = LOGO_COLORS.get(route, BLACK)
+    else:
+        route = None
+        minutes = None
+        station_name = "No Data"
+        color = None
     scroll_offset, frame_counter, scroll_pause_counter = scroll_state
 
     # Train Logo
@@ -54,11 +60,12 @@ def draw_train_line(train_data, y, scroll_state):
     screen_y = circle_center_y * SCALE
     screen_radius = circle_radius * SCALE
     
-    pygame.draw.circle(screen, color, (screen_x, screen_y), screen_radius)
-    
-    route_surface = font.render(route, False, WHITE)
-    route_rect = route_surface.get_rect(center=(screen_x, screen_y))
-    screen.blit(route_surface, route_rect)
+    if route is not None:
+        pygame.draw.circle(screen, color, (screen_x, screen_y), screen_radius)
+        
+        route_surface = font.render(route, False, WHITE)
+        route_rect = route_surface.get_rect(center=(screen_x, screen_y))
+        screen.blit(route_surface, route_rect)
 
     start_x = (circle_center_x + circle_radius + 3)
     end_x = (LED_WIDTH - 20)
@@ -87,7 +94,7 @@ def draw_train_line(train_data, y, scroll_state):
     
     # Minutes
     if minutes is not None:
-        minutes_text = f"{minutes} Min"
+        minutes_text = f"{int(minutes)} Min"
     else:
         minutes_text = "N/A"
     minutes_surface = font.render(minutes_text, False, WHITE)
