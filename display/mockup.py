@@ -2,9 +2,10 @@ from dotenv import load_dotenv
 import os
 import requests
 import pygame
-from data.logo_colors import LOGO_COLORS
+from backend.data.logo_colors import LOGO_COLORS
 
 load_dotenv()
+MTA_API_URL = "https://wheres-my-train-at.onrender.com"
 STOP_ID_1, ROUTE_ID_1 = os.getenv("DISPLAY_STOP_ID_1"), os.getenv("DISPLAY_ROUTE_ID_1")
 STOP_ID_2, ROUTE_ID_2 = os.getenv("DISPLAY_STOP_ID_2"), os.getenv("DISPLAY_ROUTE_ID_2")
 
@@ -27,7 +28,7 @@ font = pygame.font.Font(None, FONT_SIZE * SCALE)
 
 def fetch_train_data(stop_id, route_id):
     try:
-        response = requests.get(f'http://localhost:3001/mta/{stop_id}/{route_id}')
+        response = requests.get(f'{MTA_API_URL}/{stop_id}/{route_id}')
         if (response.status_code == 200):
             return response.json()
         return 

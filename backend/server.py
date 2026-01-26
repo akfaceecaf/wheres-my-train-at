@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 
 load_dotenv()
-PORT = int(os.getenv("PORT"))
+PORT = int(os.getenv("PORT",5000))
 
 with open('./data/stops.json', 'r') as f:
     STOPS = json.load(f)
@@ -61,4 +61,4 @@ def fetch_train(stopId, routeId):
         return jsonify({"error":"failed to fetch MTA data"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=PORT)
+    app.run(debug=True, port=PORT, host="0.0.0.0")
