@@ -28,7 +28,7 @@ font = pygame.font.Font(None, FONT_SIZE * SCALE)
 
 def fetch_train_data(stop_id, route_id):
     try:
-        response = requests.get(f'{MTA_API_URL}/{stop_id}/{route_id}')
+        response = requests.get(f'{MTA_API_URL}/mta/{stop_id}/{route_id}')
         if (response.status_code == 200):
             return response.json()
         return 
