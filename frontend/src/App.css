@@ -1,0 +1,30 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%;
+  padding: 1rem;
+  gap: 1rem;
+  font-size: 3rem;
+  border: 1px solid black;
+}
+
+.station-line-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.subway-logo {
+  aspect-ratio: 1/1;
+  width: 5rem;
+}
