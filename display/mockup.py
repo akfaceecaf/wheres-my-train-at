@@ -5,7 +5,7 @@ import pygame
 from backend.data.logo_colors import LOGO_COLORS
 
 load_dotenv()
-MTA_API_URL = "https://wheres-my-train-at.onrender.com"
+MTA_API_URL = os.getenv("MTA_API_URL")
 STOP_ID_1, ROUTE_ID_1 = os.getenv("DISPLAY_STOP_ID_1"), os.getenv("DISPLAY_ROUTE_ID_1")
 STOP_ID_2, ROUTE_ID_2 = os.getenv("DISPLAY_STOP_ID_2"), os.getenv("DISPLAY_ROUTE_ID_2")
 
